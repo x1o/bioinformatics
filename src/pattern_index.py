@@ -11,6 +11,7 @@ def pat_ix(P, S):
     >>> pat_ix('AT', 'A')
     ()
     '''
+
     i = 0
     ix = []
     try:
@@ -24,7 +25,7 @@ if __name__ == '__main__':
     # import doctest
     # doctest.testmod()
     # S = open('/home/xio/Desktop/Vibrio_cholerae.txt', 'r').read().strip()
-    S = open('/home/xio/Desktop/Thermotoga-petrophila.txt', 'r').read().strip()
+    S = open('../dna/Thermotoga-petrophila.txt', 'r').read().strip()
     P = 'CTTGATCAT'
     print ' '.join([str(el) for el in pat_ix(P, S)])
     print ' '.join([str(el) for el in pat_ix(complement(P), S)])
