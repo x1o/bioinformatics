@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 
-def complement(T):
+def rev_compl(T):
     '''
-    >>> complement('AAAACCCGGT')
+    >>> rev_compl('AAAACCCGGT')
     'ACCGGGTTTT'
     '''
     import string

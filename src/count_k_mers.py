@@ -23,9 +23,9 @@ def gen_mutations(S, d):
 
     # List of indices at which to mutate the DNA
     ix = [p for p in itertools.product(*[range(len(S)) for _ in range(d)]) if not has_inv(p)]
-    # [A,T,C,G]^d (Cartesian product)
+    # [A,T,C,G]^d (Cartesian product of nucleotides)
     nx = [p for p in itertools.product(*[['A', 'T', 'C', 'G'] for _ in range(d)])]
-    # List of resulting strings with mutations
+    # Set of resulting strings with mutations
     sx = set([S])
 
     dbg('ix: %s' % ix)
@@ -41,7 +41,7 @@ def gen_mutations(S, d):
     return sx
 
 
-def count_k_mers(T, k, threshold=False, strict_eq=False, d=0):
+def count_k_mers(T, k, threshold=False, strict_eq=False, d=0, with_rev_c=False):
     '''
     >>> count_k_mers('ACGTTGCATGTCGCATGATGCATGAGAGCT', 4)
     ['CATG', 'GCAT']
@@ -55,11 +55,12 @@ def count_k_mers(T, k, threshold=False, strict_eq=False, d=0):
     ['GATG', 'ATGC', 'ATGT']
     >>> count_k_mers('CACAGTAGGCGCCGGCACACACAGCCCCGGGCCCCGGGCCGCCCCGGGCCGGCGGCCGCCGGCGCCGGCACACCGGCACAGCCGTACCGGCACAGTAGTACCGGCCGGCCGGCACACCGGCACACCGGGTACACACCGGGGCGCACACACAGGCGGGCGCCGGGCCCCGGGCCGTACCGGGCCGCCGGCGGCCCACAGGCGCCGGCACAGTACCGGCACACACAGTAGCCCACACACAGGCGGGCGGTAGCCGGCGCACACACACACAGTAGGCGCACAGCCGCCCACACACACCGGCCGGCCGGCACAGGCGGGCGGGCGCACACACACCGGCACAGTAGTAGGCGGCCGGCGCACAGCC', 10, False, False, 2)
     ['GCACACAGAC', 'GCGCACACAC']
-    >>> count_k_mers('CTTGCCGGCGCCGATTATACGATCGCGGCCGCTTGCCTTCTTTATAATGCATCGGCGCCGCGATCTTGCTATATACGTACGCTTCGCTTGCATCTTGCGCGCATTACGTACTTATCGATTACTTATCTTCGATGCCGGCCGGCATATGCCGCTTTAGCATCGATCGATCGTACTTTACGCGTATAGCCGCTTCGCTTGCCGTACGCGATGCTAGCATATGCTAGCGCTAATTACTTAT', 9, False, False, 3)
-    ['AGCGCCGCT', 'AGCGGCGCT']
+    >>> count_k_mers('ACGTTGCATGTCGCATGATGCATGAGAGCT', 4, False, False, 1, True)
+    ['ATGT', 'ACAT']
     '''
 
     from operator import ge, eq
+    from complement import rev_compl
 
     i = 0
     L = len(T)
@@ -67,12 +68,17 @@ def count_k_mers(T, k, threshold=False, strict_eq=False, d=0):
     dbg('>>> %s - %s - %s <<<' % (T, k, d))
 
     def add_kmer(D, kmer):
-        if not D.has_key(kmer):
-            dbg('> %s' % kmer)
-            D[kmer] = 1
-        else:
-            dbg('+ %s' % kmer)
-            D[kmer] += 1
+        kx = [kmer]
+        if with_rev_c:
+            kx.append(rev_compl(kmer))
+
+        for k in kx:
+            try:
+                D[k] += 1
+                dbg('> %s' % k)
+            except KeyError:
+                D[k] = 1
+                dbg('+ %s' % k)
 
     while i <= L-k:
         cur_p = T[i:i+k]
@@ -97,8 +103,8 @@ def count_k_mers(T, k, threshold=False, strict_eq=False, d=0):
     # return [item for item in D.items() if item[1] >= 3]
 
 if __name__ == '__main__':
-    logging.basicConfig(level='DEBUG')
-    # logging.basicConfig(level='INFO')
+    # logging.basicConfig(level='DEBUG')
+    logging.basicConfig(level='INFO')
     import doctest
     doctest.testmod()
     # print gen_mutations('ACTG', 1)
@@ -110,6 +116,6 @@ if __name__ == '__main__':
     # print count_k_mers(S, 9, 2)
     # S = 'TGCTGCATTGATTGAATGGCATTGAATATGTGCATGAATGGCGGCTGCATTGGGCTGCATTGATGATTGATTGATTGGGCGGCAATAATTGCATTGAATAATATTGAATATGATGAATTGCTGCATGTGCGGCATGATTGATGGGCATTGTGCTGCATGGGCGGCATTGGGCTGCATGAATATTGAATATGGGCTGCGGCATGATGTGCTGCTGCATTGTGCGGCATTGAATGGCATGGGCGGCGGCGGCATGATGATGAATGGCTGCATTGAATATTGGGCAATATGAATGGCTGCATGATTGAATATGGGCTGCTGCAATAAT'
     # print count_k_mers(S, 9, False, False, 2)
-    # S = 'AACATCCAGTCCTCTCCCTCTCGTCGTCCCGTACCTCCCGTCAATCCACCTCAGTCCCCATCCCCCCCCCCGTCCCTCGTGTGTGTTCCCCGTCTCCCCACCGTTCTCTCCCGTTCGTTCCCCAATCTCGTAGTTCCCGTTCGTCGTCGTAACCCCAGTTCGTCCATCCCCCCCCTCGTCGTGTATCACCTCCCCTCC'
-    # print count_k_mers(S, 9, False, False, 2)
-
+    S = 'CGCCGGGGGGGCGGGGGGGGGGGGGCGGGGCGGGCCGGCCGGGGGGGGGGCCCGGGGGCCGCCGGCGGCGCCCCCGGGGGGGGGCCCGCCGGCCGCCCGGGGCGGGGGGCGGCCGCGGGCGGCGCGGGCCCCGGGGCCGCGGGCGGCGGGGCGGCGCGCGCGGCGGCCCGCCCGGCCGGCGCGGCGGGCCGGGGCGCGCCGCGCGCGGGCG'
+    for kmer in count_k_mers(S, 8, False, False, 3, True):
+        print kmer,
